@@ -20,10 +20,10 @@ if __name__ == "__main__":
         
         seeds.append(seed)
 
-    if len(seeds) == 0 and random.randrange(1,100) > 96:
-        bot.markov_tweet_from_queries(bot.get_trending_hashtag())
+    if len(seeds) == 0 and random.randrange(1,100) < 4:
+        bot.markov_tweet_from_queries(bot.get_trending_hashtag(), False)
     
     for seed in seeds:
-        bot.markov_tweet_from_queries(seed)
+        bot.markov_tweet_from_queries(seed, True)
 
 

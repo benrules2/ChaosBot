@@ -30,7 +30,7 @@ class account:
         for tweet in hashtag_tweets:
             print (tweet.text)
 
-    def markov_tweet_from_queries(self, seed, hashtag_out = '#mayhem_bot', tweet_count = 3000, reply = ''):
+    def markov_tweet_from_queries(self, seed, force_completion, hashtag_out = '#mayhem_bot', tweet_count = 5000, reply = ''):
         total_seed = len(seed.users) + len(seed.hashtags)
         message_list = []
         
@@ -61,8 +61,10 @@ class account:
             if(len(seed.users) > 0):
                prefix, suffix = quote_users(seed.users)     
                     
-            message = markov.markov_tweet(message_list, hashtag_out, prefix = prefix, suffix = suffix) #,reply = '@' + seed.source_account + ':')
-            self.custom_message(trim_to_140(message))
+            message = markov.markov_tweet(message_list, hashtag_out, force_complete = force_completion, prefix = prefix, suffix = suffix) #,reply = '@' + seed.source_account + ':')
+            
+            if message:
+                self.custom_message(trim_to_140(message))
 
     def retrieve_seeds_for_bot(self, name, minutes = 15, max = 10):
         index = 0

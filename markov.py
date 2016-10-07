@@ -2,30 +2,37 @@ import random
 import language
 import sys
 
+class Message_stats:
+    def __init__(self, text, count, broken):
+        self.text = text
+        self.count = count
+        self.broken_count = broken
+
 class MarkovSeed:
     def __init__(self):
         self.hashtags = []
         self.users = []
         self.source_account = ''
 
-def markov_tweet(tweets, hashtag, prefix='', suffix='', reply=''):
+def markov_tweet(tweets, hashtag, prefix='', suffix='', reply='', force_complete = False):
 
-    count = 0
+    
     table = {}
     start = {}
     
     table, start = build_chain(tweets)
-
-    message1, count1 = generate_message(table, start, hashtag, reply = reply, prefix = prefix, suffix = suffix)
-    message2, count2 = generate_message(table, start, hashtag, reply = reply, prefix = prefix, suffix = suffix)
-    message3, count3 = generate_message(table, start, hashtag, reply = reply, prefix = prefix, suffix = suffix)
-
-    if count1 > count2 and count1 > count3:
-        return message1
-    elif count2 > count1 and count2 > count3:
-        return message2
-    else:
-        return message3
+    
+    count = 0
+    target_len = 100
+    while True:
+        message = generate_message(table, start, hashtag, target_len, reply = reply, prefix = prefix, suffix = suffix, force_complete = force_complete )
+        if (message.count > float(len(message.text.split(' ')) * 1.5) and message.broken_count == 0) or (count == 50 and force_complete):
+            return message.text    
+        elif count == 50 and not force_complete:
+            return None
+        count += 1
+        target_len -= 1
+        
 
 def build_chain(tweets):
     nonword = "\n" 
@@ -57,7 +64,7 @@ def build_chain(tweets):
 
     return table,start
 
-def generate_message(table, start, hashtag, prefix='', suffix='', reply=''):
+def generate_message(table, start, hashtag, target_len, prefix='', suffix='', reply='', force_complete = False):
 
     w1 = random.choice(list(start.keys()))
     w2 = start[w1]
@@ -65,15 +72,16 @@ def generate_message(table, start, hashtag, prefix='', suffix='', reply=''):
     output = w1.capitalize() + ' ' + w2
     output_temp = output
     count = 0
-    total_chain_len = 0
+    total_chain_len = 2
     count_chain = 0
     chain_len = 0
+    broken_chain = 0
 
-    while len(output + '      ' + hashtag + reply + prefix + suffix) < 140 and count < 1000:
-        
+    while len(output + '      ' + hashtag + reply + prefix + suffix) < target_len and count < 1000:
+      
         output = output_temp
         #if tweet is long enough, end on complete sentences
-        if len(output) > 30 and output.rstrip().endswith(tuple([".","!","?"])):
+        if len(output) > 20 and output.rstrip().endswith(tuple([".","!","?"])):
             break
         
         try:
@@ -83,10 +91,14 @@ def generate_message(table, start, hashtag, prefix='', suffix='', reply=''):
             chain_len += len(table[(w1,w2)])
             total_chain_len += len(table[(w1,w2)])
         except:
-            seed = random.choice(list(table.keys()))
-            newword = w1
-            count_chain = 0
-            chain_len = 0
+            if force_complete:
+                seed = random.choice(list(table.keys()))
+                newword = w1
+                count_chain = 0
+                chain_len = 0
+                broken_chain += 1
+            else:
+                return Message_stats("Insufficient chain", 0, 1)
 
         output_temp += ' ' + newword
         w1, w2 = w2, newword
@@ -98,14 +110,15 @@ def generate_message(table, start, hashtag, prefix='', suffix='', reply=''):
             w1 = random.choice(list(start.keys()))
             w2 = start.pop(w1)
             output_temp += random.choice(['!','.','?',',','','','','','']) + ' ' + w1 + ' ' + w2
-        
-       
     
     output = output.lstrip()
     if not output.rstrip().endswith('.') and not output.endswith('?') and not output.endswith('!'):
         output = output.rstrip() + random.choice(['!','.','?']) + ' '
     message = prefix + output[0].capitalize() + output[1:] + suffix + ' ' + hashtag
-    return language.sanitize_language(message), total_chain_len
+
+    message_data = Message_stats(language.sanitize_language(message), total_chain_len, broken_chain)
+    
+    return message_data
 
 
 

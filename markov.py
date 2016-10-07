@@ -14,7 +14,7 @@ class MarkovSeed:
         self.users = []
         self.source_account = ''
 
-def markov_tweet(tweets, hashtag, prefix='', suffix='', reply='', force_complete = False):
+def markov_tweet(tweets, hashtag, prefix='', suffix='', reply='', force_complete=False):
 
     
     table = {}
@@ -25,8 +25,8 @@ def markov_tweet(tweets, hashtag, prefix='', suffix='', reply='', force_complete
     count = 0
     target_len = 100
     while True:
-        message = generate_message(table, start, hashtag, target_len, reply = reply, prefix = prefix, suffix = suffix, force_complete = force_complete )
-        if (message.count > float(len(message.text.split(' ')) * 1.5) and message.broken_count == 0) or (count == 50 and force_complete):
+        message = generate_message(table, start, hashtag, target_len, reply = reply, prefix = prefix, suffix = suffix, force_complete = force_complete)
+        if (message.count > float(len(message.text.split(' ')) * 1.2) and message.broken_count == 0) or (count == 50 and force_complete):
             return message.text    
         elif count == 50 and not force_complete:
             return None
@@ -64,7 +64,7 @@ def build_chain(tweets):
 
     return table,start
 
-def generate_message(table, start, hashtag, target_len, prefix='', suffix='', reply='', force_complete = False):
+def generate_message(table, start, hashtag, target_len, prefix='', suffix='', reply='', force_complete=False):
 
     w1 = random.choice(list(start.keys()))
     w2 = start[w1]
@@ -102,14 +102,6 @@ def generate_message(table, start, hashtag, target_len, prefix='', suffix='', re
 
         output_temp += ' ' + newword
         w1, w2 = w2, newword
-
-        #if markov chain has few options, reseed
-        if count_chain > 4 and chain_len < count_chain + 4:
-            count_chain = 0
-            chain_len = 0
-            w1 = random.choice(list(start.keys()))
-            w2 = start.pop(w1)
-            output_temp += random.choice(['!','.','?',',','','','','','']) + ' ' + w1 + ' ' + w2
     
     output = output.lstrip()
     if not output.rstrip().endswith('.') and not output.endswith('?') and not output.endswith('!'):

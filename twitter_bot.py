@@ -66,13 +66,15 @@ class account:
             if message:
                 self.custom_message(trim_to_140(message))
 
-    def retrieve_seeds_for_bot(self, name, minutes = 15, max = 10):
+    def retrieve_seeds_for_bot(self, name, minutes = 15, max = 5):
         index = 0
         seeds = [] 
 
         tweets = self.api.search(q=name, rpp = max)
 
         for tweet in tweets:
+            if hasattr(tweet, 'retweeted_status'):
+                continue
             if (tweet.created_at > datetime.datetime.utcnow() - datetime.timedelta(minutes = minutes)) and tweet.retweeted == False:
                 seed = markov.MarkovSeed()
                 seed.source_account = tweet.user.screen_name
